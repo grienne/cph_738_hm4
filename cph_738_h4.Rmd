@@ -1,0 +1,83 @@
+---
+title: "homework_4"
+author: "grienne"
+date: "September 25, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r Foundation}
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+
+dat <- read_excel("EX854_V3_DH_2.xlsx")
+
+
+```
+
+
+```{r Question 1}
+
+q1men <- (rnorm(100, mean = 69.1, sd = 2.9))
+q1women <- (rnorm(100, mean = 63.7, sd = 2.7))
+
+
+summary(q1men)
+summary(q1women)
+
+combine <- c(q1men, q1women)
+
+tmpq1 <- data.frame(q1men, q1women)
+
+
+p = ggplot(tmp1, aes(x = Time.to.Remission, fill = flg))
+p + geom_histogram(alpha = 0.7, position  = "dodge")
+
+
+
+
+q1hist <- ggplot(data = tmpq1, aes(x = q1men)) 
+                 
+
+q1hist + geom_histogram()
+
+```
+
+
+
+
+
+```{Question 2}
+
+```
+
+
+
+
+```{r Question 3}
+
+q3var <- rnorm(1000, 0, 1)
+q3var2 <- rnorm (1000,0,1)
+q3lm <- lm(q3var ~ q3var2)
+summary(q3lm)
+
+z.score <- rep(NA, 100)
+for(k in 1:100){
+var1 <- rnorm(1000, 0, 1)
+var2 <- rnorm(1000, 0, 1)
+fit <- lm(var2 ~ var1)
+z.score[k] <- coef(fit)[2] / coef(summary(fit))[2,2]
+}
+
+```
+
+
+```{Question 4}
+```
