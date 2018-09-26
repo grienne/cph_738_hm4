@@ -28,25 +28,28 @@ dat <- read_excel("EX854_V3_DH_2.xlsx")
 q1men <- (rnorm(100, mean = 69.1, sd = 2.9))
 q1women <- (rnorm(100, mean = 63.7, sd = 2.7))
 
-
-summary(q1men)
-summary(q1women)
-
-combine <- c(q1men, q1women)
-
-tmpq1 <- data.frame(q1men, q1women)
+q1_com <- q1men - q1women
 
 
-p = ggplot(tmp1, aes(x = Time.to.Remission, fill = flg))
-p + geom_histogram(alpha = 0.7, position  = "dodge")
+summary(q1_com)
+sd(q1_com)
+
+q1_com_sim <- rnorm(1000, mean = 5.365, sd = 4.1569225)
+summary(q1_com_sim)
+sd(q1_com_sim)
+
+
+q1sim_df <- data.frame(q1_com_sim)
+
+
+q1_p = ggplot(q1sim_df, aes(x = q1_com_sim))
+q1_p + geom_histogram(alpha = 0.7) 
 
 
 
 
-q1hist <- ggplot(data = tmpq1, aes(x = q1men)) 
-                 
 
-q1hist + geom_histogram()
+
 
 ```
 
@@ -79,5 +82,33 @@ z.score[k] <- coef(fit)[2] / coef(summary(fit))[2,2]
 ```
 
 
-```{Question 4}
+```{r Question 4}
+
+Test <- function (y){
+max (y)
+}
+n.sims <- 1e3
+test.rep <- rep (NA, n.sims)
+for (s in 1:n.sims){
+y.reps <- exp( rnorm(B, mean = day1, sd = sigma.e))
+test.rep[s] <- Test (y.reps)
+}
+
+Test2 <- function (y){
+min (y)
+}
+n.sims <- 1e3
+test.rep <- rep (NA, n.sims)
+for (s in 1:n.sims){
+y.reps <- exp( rnorm(B, mean = day1, sd = sigma.e))
+test.rep[s] <- Test (y.reps)
+}
+
+q4_frame <- data.frame(test.rep)
+
+p2 <- ggplot(q4_frame, aes(x = test.rep))
+p2 + geom_histogram(alpha = 0.7, position  = "dodge")
+
+
+##The resulting graph looks similar to the graph generated in class. The graph in class was produced using les than 150 individuals, the graph generated here is produced with over 1000 suggesting that if the number of individuals was increased in the class graph the image would likely look similar. 
 ```
