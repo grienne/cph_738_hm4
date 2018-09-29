@@ -65,12 +65,10 @@ q2_intercept
 RSS <- .1 * (.5/.95)
 RSS
 
-
+## y = 6.957 + .08x
 
 ##B
-
 R2 <- 1 - (RSS^2 / ((.05)^2))
-
 R2
 
 
@@ -85,6 +83,10 @@ q3var2 <- rnorm (1000,0,1)
 q3lm <- lm(q3var ~ q3var2)
 summary(q3lm)
 
+
+# a. No.
+# 
+# 
 z.score <- rep(NA, 100)
 for(k in 1:100){
 var1 <- rnorm(1000, 0, 1)
@@ -92,6 +94,9 @@ var2 <- rnorm(1000, 0, 1)
 fit <- lm(var2 ~ var1)
 z.score[k] <- coef(fit)[2] / coef(summary(fit))[2,2]
 }
+
+
+
 
 ```
 
