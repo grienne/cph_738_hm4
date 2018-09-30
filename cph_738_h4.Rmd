@@ -103,16 +103,6 @@ z.score[k] <- coef(fit)[2] / coef(summary(fit))[2,2]
 
 ```{r Question 4}
 
-Test <- function (y){
-max (y)
-}
-n.sims <- 1e3
-test.rep <- rep (NA, n.sims)
-for (s in 1:n.sims){
-y.reps <- exp( rnorm(B, mean = day1, sd = sigma.e))
-test.rep[s] <- Test (y.reps)
-}
-
 Test2 <- function (y){
 min (y)
 }
