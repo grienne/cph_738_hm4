@@ -2,7 +2,10 @@
 title: "homework_4"
 author: "grienne"
 date: "September 25, 2018"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -26,22 +29,30 @@ dat <- read_excel("EX854_V3_DH_2.xlsx")
 
 ```{r Question 1}
 
-q1men <- (rnorm(100, mean = 69.1, sd = 2.9))
-q1women <- (rnorm(100, mean = 63.7, sd = 2.7))
+##Updated, the question asked for 100 ppl at 1000 simulations
 
-q1_com <- q1men - q1women
+n <- 100
+
+S <- 1000
+
+q1men <- matrix(rnorm(n*S, mean = 69.1, sd = 2.9), nrow = n, ncol = S)
+q1women <- matrix(rnorm(n*S, mean = 63.7, sd = 2.7), nrow = n, ncol = S)
+
+bar.x <- apply(q1men, 2, mean)
+bar.y <- apply(q1women, 2, mean)
 
 
-summary(q1_com)
-sd(q1_com)
+mean(bar.x - bar.y)
+var(bar.x - bar.y)
+
+
+
 
 q1_com_sim <- rnorm(1000, mean = 5.365, sd = 4.1569225)
 summary(q1_com_sim)
 sd(q1_com_sim)
 
-
 q1sim_df <- data.frame(q1_com_sim)
-
 
 q1_p = ggplot(q1sim_df, aes(x = q1_com_sim))
 q1_p + geom_histogram(alpha = 0.7) 
@@ -57,18 +68,24 @@ q1_p + geom_histogram(alpha = 0.7)
 
 ```{r Question 2}
 
-## A; note we have this in log but it can be exp'd to finalize
+##2A; note we have this in log but it can be exp'd to finalize
 q2_intercept <- log(30000) - (0.008/0.01) * log(66)
 q2_intercept
 
 
-RSS <- .1 * (.5/.95)
-RSS
+## y = 6.957 + .08log(x)
 
-## y = 6.957 + .08x
 
-##B
-R2 <- 1 - (RSS^2 / ((.05)^2))
+  
+##2B
+
+##The question stated that 95% of the population fell within a factor of 1.1 of predicted earnings
+##95% of observations should fall within +/-2 S.E.
+##ergo, log y +/- 2*S.E => log(y) +/- 2*S.E., exponentiate => y * e^2*S.E.
+##e^(2 * S.E.) = 1.1 -> S.E. = .0476
+  
+
+R2 <- 1 - (.0476^2 / ((.05)^2))
 R2
 
 
@@ -78,15 +95,18 @@ R2
 
 ```{r Question 3}
 
+##Question 3a.
 q3var <- rnorm(1000, 0, 1)
 q3var2 <- rnorm (1000,0,1)
 q3lm <- lm(q3var ~ q3var2)
 summary(q3lm)
+plot(q3var2 ~ q3var) +
+abline(lm(q3var2 ~ q3var))
+
+# a. No, the coefficient is not statisticaly significant.
 
 
-# a. No.
-# 
-# 
+ 
 z.score <- rep(NA, 100)
 for(k in 1:100){
 var1 <- rnorm(1000, 0, 1)
@@ -95,6 +115,8 @@ fit <- lm(var2 ~ var1)
 z.score[k] <- coef(fit)[2] / coef(summary(fit))[2,2]
 }
 
+z.sign <- which(abs(z.score)>2)
+length(z.sign)
 
 
 
@@ -103,6 +125,82 @@ z.score[k] <- coef(fit)[2] / coef(summary(fit))[2,2]
 
 ```{r Question 4}
 
+## handling date observations 
+## Date of first StUD Dx
+dat$StUD_XDt <- as.Date(dat$StUD_XDt)
+## Date of first remission
+dat$remis_dt <- as.Date(dat$remis_dt)
+## Time to remission (in days)
+dat$Days.to.remission <- with(dat,
+                              difftime(remis_dt, StUD_XDt, units = "days")
+                              )
+## make it a numeric variable
+dat$Days.to.remission <- as.numeric(dat$Days.to.remission)
+summary(dat$Days.to.remission)
+
+## create a flag for bupropion prescription
+dat$BupFlag <- with(dat,
+                    ifelse(Bupropion == 1, "No Bupropion", "Bupropion")
+                    )
+## relable SEX
+dat$gender <- as.factor(with(dat, 
+                            ifelse(SEX == 1, 'Male', 'Female')
+                            )
+                        )
+## relationship with employee
+dat$emp <- as.factor(with(dat,
+                          ifelse(EMPREL == 1, "Employee",
+                          ifelse(EMPREL == 2, "Spouse",
+                          ifelse(EMPREL == 3, "Child",
+                                 "Dependent")))))
+## StUD type
+dat$SUD_Type <- with(dat,
+                      ifelse(StUD_Type == 1, "Cocaine",
+                             ifelse(StUD_Type == 2, "Amphetamine",
+                                    "Both")
+                             )
+                     )
+dat$log.days <- log(dat$Days.to.remission)
+
+obs1 <- subset(dat, gender == "Female" & emp == "Child" & SUD_Type == "Amphetamine")
+B <- length(na.omit(obs1$Days.to.remission))
+
+
+fit0 <- lm(log.days ~ BupFlag * SUD_Type +
+              gender + emp + AGE + I(AGE^2),
+          data = dat)
+
+fit1 <- update(fit0, . ~ . - BupFlag : SUD_Type)
+summary(fit1)
+
+fit2 <- update(fit1, . ~ . - I(AGE^2))
+summary(fit2)
+anova(fit2)
+
+fit3 <- update(fit2, . ~ . - BupFlag)
+summary(fit3)
+anova(fit3)
+
+
+coefs <- coefficients(fit3)
+X1 <- c(1, rep(0, 5), mean(dat$AGE))
+day1 <- t(coefs) %*% X1
+sigma.e <- sqrt(var(residuals(fit3)))
+
+
+
+##Question 4A
+Test <- function (y){ max (y) } 
+
+n.sims <- 1e3 
+    test.rep <- rep (NA, n.sims) 
+    for (s in 1:n.sims){ 
+      y.reps <- exp( rnorm(B, mean = day1, sd = sigma.e)) 
+      test.rep[s] <- Test (y.reps) 
+      }
+
+
+##Question 4B
 Test2 <- function (y){
 min (y)
 }
@@ -116,8 +214,12 @@ test.rep[s] <- Test (y.reps)
 q4_frame <- data.frame(test.rep)
 
 p2 <- ggplot(q4_frame, aes(x = test.rep))
-p2 + geom_histogram(alpha = 0.7, position  = "dodge")
+p2 + geom_histogram(alpha = 0.7, position  = "dodge") +
+    geom_vline(xintercept = 1756.796)
 
 
-##The resulting graph looks similar to the graph generated in class. The graph in class was produced using les than 150 individuals, the graph generated here is produced with over 1000 suggesting that if the number of individuals was increased in the class graph the image would likely look similar. 
+
+
+##Question 4C
+##The resulting graph does not look similar. 
 ```
